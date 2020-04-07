@@ -1,31 +1,29 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './style.css';
+
+import io from 'socket.io-client';
 
 type ClientPageProps = {
 
 }
 
 const ClientPage: React.FC<ClientPageProps> = () => {
-    const imgRef = useRef<HTMLVideoElement>(null);
+    const imageRef = useRef<HTMLImageElement>(null);
+    const [socket, setSocket] = useState<SocketIOClient.Socket | null>(null);
+
+
     useEffect(() => {
-        var { current } = imgRef;
-        if (current) {
-            navigator.getUserMedia({ video: true, audio: false }, stream => {
-                console.log(stream)
-                current!.srcObject = stream;
-                current!.onloadedmetadata = () => {
-                    current?.play()
-                };
-            }, error => {
-                console.error('Rejected!', error);
-            });
-        }
-    }, [imgRef]);
+        var socketConn = io('http://localhost:8080/stream');
+        socketConn.on("get-frame", (frame: string) => {
+            var image = imageRef?.current;
+            if (image) {
+                image!.src = frame;
+            }
+        });
+    }, []);
 
     return (
-        <div className="App">
-            <video ref={imgRef}></video>
-        </div>
+        <img ref={imageRef} style={{ height: 420, width: 540, borderRadius: 50 }} />
     );
 
 }
